@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>视频裁切工具</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <h1>视频裁切工具</h1>
+    <div class="form-group">
+        <input type="file" id="videoInput" accept="video/*" required>
+    </div>
+    
+    <div class="mode-switch">
+        <button id="toggleMode" type="button">切换裁切模式</button>
+    </div>
+    
+    <div class="video-container">
+        <video id="videoPreview" controls>
+            您的浏览器不支持 HTML5 视频。
+        </video>
+        <div id="cropLine"></div>
+        <div id="cropInfo" class="crop-info"></div>
+        <div class="controls-overlay">
+            点击视频设置裁切位置 (按A键切换模式)
+        </div>
+    </div>
+    
+    <div class="controls">
+        <input type="number" id="cropHeight" min="100" placeholder="裁切位置">
+        <button id="processBtn" disabled>裁切视频</button>
+    </div>
+    
+    <div id="progress" class="progress">处理中...</div>
+    <div id="result"></div>
+    
+    <script src="/static/js/main.js"></script>
+</body>
+</html> 
