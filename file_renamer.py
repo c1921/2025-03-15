@@ -3,6 +3,9 @@ from pathlib import Path
 import re
 import json
 import sys
+import ffmpeg
+import subprocess
+from typing import Tuple
 
 def load_config():
     config_path = Path("config.json")
@@ -58,6 +61,38 @@ def get_next_available_number(folder, folder_name):
         number += 1
     return number
 
+def remove_audio(input_file: Path, output_file: Path) -> Tuple[bool, str]:
+    """
+    移除视频文件的音频轨道
+    返回: (是否成功, 错误信息)
+    """
+    try:
+        # 构建ffmpeg命令
+        cmd = [
+            'ffmpeg',
+            '-i', str(input_file),  # 输入文件
+            '-c:v', 'copy',         # 复制视频流，不重新编码
+            '-an',                  # 移除音频
+            '-y',                   # 覆盖输出文件
+            str(output_file)
+        ]
+        
+        # 执行命令，将输出重定向到PIPE
+        result = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        if result.returncode == 0:
+            return True, ""
+        else:
+            return False, result.stderr
+            
+    except Exception as e:
+        return False, str(e)
+
 def process_folder(folder, file_extensions, skip_existing):
     print(f"\n处理文件夹: {folder.name}")
     
@@ -93,18 +128,45 @@ def process_folder(folder, file_extensions, skip_existing):
             new_path = folder / new_name
         
         try:
-            print(f"正在重命名: {file.name} -> {new_name}")
-            file.rename(new_path)
-            print(f"✓ 重命名成功")
+            print(f"正在处理: {file.name}")
+            
+            # 创建临时文件路径
+            temp_file = folder / f"temp_{new_name}"
+            
+            # 移除音频
+            print("- 移除音频中...")
+            success, error = remove_audio(file, temp_file)
+            
+            if not success:
+                print(f"× 移除音频失败: {error}")
+                continue
+                
+            # 如果原文件和目标文件不同，则删除原文件
+            if file != new_path:
+                file.unlink()
+            
+            # 将临时文件重命名为目标文件名
+            temp_file.rename(new_path)
+            print(f"✓ 处理完成: {new_name}")
             next_number += 1
+            
         except Exception as e:
-            print(f"× 重命名失败: {str(e)}")
+            print(f"× 处理失败: {str(e)}")
+            # 清理临时文件
+            if temp_file.exists():
+                temp_file.unlink()
 
 if __name__ == "__main__":
+    # 检查ffmpeg是否可用
+    try:
+        subprocess.run(['ffmpeg', '-version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except FileNotFoundError:
+        print("错误: 未找到ffmpeg。请确保已安装ffmpeg并添加到系统PATH中。")
+        sys.exit(1)
+
     config = load_config()
     
     if not config["target_directories"]:
-        # 如果配置文件中没有目标目录，则请求用户输入
         target_directory = input("请输入要处理的目录路径: ").strip()
         if not target_directory:
             target_directory = "."
