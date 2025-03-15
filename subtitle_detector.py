@@ -3,6 +3,7 @@ import numpy as np
 from pathlib import Path
 import ffmpeg
 import matplotlib.pyplot as plt
+from video_cropper import crop_video  # 添加此导入
 
 class SubtitleDetector:
     def __init__(self, sample_interval=1.0, debug=True):
@@ -287,61 +288,12 @@ class SubtitleDetector:
         
         return crop_position
 
-    def crop_video(self, input_path: Path, output_path: Path, crop_height: int):
-        """
-        裁切视频
-        :param input_path: 输入视频路径
-        :param output_path: 输出视频路径
-        :param crop_height: 裁切位置（距离顶部的像素数）
-        """
-        try:
-            # 获取视频信息
-            probe = ffmpeg.probe(str(input_path))
-            video_info = next(s for s in probe['streams'] if s['codec_type'] == 'video')
-            width = int(video_info['width'])
-            height = int(video_info['height'])
-            
-            # 计算裁切参数
-            crop_height = min(crop_height, height - 100)  # 确保至少保留100像素
-            new_height = crop_height
-            
-            print(f"原始视频尺寸: {width}x{height}")
-            print(f"裁切后尺寸: {width}x{new_height}")
-            
-            # 构建ffmpeg命令
-            stream = (
-                ffmpeg
-                .input(str(input_path))
-                .filter('crop', width, new_height, 0, 0)  # crop=w:h:x:y
-                .output(str(output_path),
-                       # 使用高质量编码设置
-                       vcodec='h264',              # 使用h264编码器
-                       preset='slow',              # 较慢的编码速度，更好的质量
-                       crf=18,                     # 恒定质量因子（0-51，越小质量越好）
-                       acodec='aac',               # 音频编码器
-                       audio_bitrate='192k',       # 音频比特率
-                       **{'loglevel': 'error'})    # 只显示错误信息
-            )
-            
-            # 执行ffmpeg命令
-            print("开始裁切视频...")
-            stream.run(capture_stdout=True, capture_stderr=True)
-            print(f"视频裁切完成: {output_path}")
-            
-        except ffmpeg.Error as e:
-            print(f"处理视频时出错: {e.stderr.decode()}")
-            raise
-        except Exception as e:
-            print(f"发生错误: {str(e)}")
-            raise
-
     def process_video(self, input_path: Path):
         """
         处理单个视频：检测字幕位置并裁切
         :param input_path: 输入视频路径
         """
         try:
-            # 检测字幕位置
             print(f"\n处理视频: {input_path}")
             crop_height = self.detect_subtitle_height(input_path)
             print(f"检测到字幕位置: 距离顶部 {crop_height} 像素")
@@ -349,8 +301,8 @@ class SubtitleDetector:
             # 构建输出文件路径
             output_path = input_path.parent / f"{input_path.stem}_cropped{input_path.suffix}"
             
-            # 裁切视频
-            self.crop_video(input_path, output_path, crop_height)
+            # 调用独立的裁切函数
+            crop_video(input_path, output_path, crop_height)
             
         except Exception as e:
             print(f"处理视频 {input_path} 时出错: {str(e)}")

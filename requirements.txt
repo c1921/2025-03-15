@@ -2,3 +2,6 @@ ffmpeg-python
 opencv-python
 numpy
 matplotlib
+fastapi
+python-multipart
+uvicorn
