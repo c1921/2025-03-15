@@ -7,6 +7,9 @@ import shutil
 import uvicorn
 from video_cropper import crop_video
 import tempfile
+import webbrowser
+import threading
+import time
 
 app = FastAPI()
 
@@ -88,5 +91,13 @@ async def process_video(
             content={"error": str(e)}
         )
 
+def open_browser():
+    """延迟一秒后打开浏览器"""
+    time.sleep(1)
+    webbrowser.open('http://localhost:8000')
+
 if __name__ == "__main__":
+    # 创建线程来打开浏览器
+    threading.Thread(target=open_browser, daemon=True).start()
+    # 启动服务器
     uvicorn.run(app, host="localhost", port=8000) 
