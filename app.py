@@ -11,7 +11,7 @@ import tempfile
 app = FastAPI()
 
 # 创建必要的目录
-UPLOAD_DIR = Path("uploads")
+UPLOAD_DIR = Path("output")
 TEMPLATES_DIR = Path("templates")
 UPLOAD_DIR.mkdir(exist_ok=True)
 TEMPLATES_DIR.mkdir(exist_ok=True)
