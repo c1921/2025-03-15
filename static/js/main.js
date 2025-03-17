@@ -16,6 +16,8 @@ function toggleCropMode() {
     cropMode = !cropMode;
     videoContainer.classList.toggle('crop-mode', cropMode);
     toggleMode.textContent = cropMode ? '退出裁切模式' : '切换裁切模式';
+    toggleMode.classList.toggle('btn-outline-primary', !cropMode);
+    toggleMode.classList.toggle('btn-primary', cropMode);
 
     // 在裁切模式下暂停视频
     if (cropMode) {
@@ -91,6 +93,9 @@ videoInput.onchange = (e) => {
         processBtn.disabled = false;
         cropMode = false;
         videoContainer.classList.remove('crop-mode');
+        toggleMode.classList.add('btn-outline-primary');
+        toggleMode.classList.remove('btn-primary');
+        toggleMode.textContent = '切换裁切模式';
 
         // 加载视频后显示裁切线
         videoPreview.onloadedmetadata = () => {
@@ -116,7 +121,7 @@ function updateCropLine(pos) {
 processBtn.onclick = async () => {
     if (!videoInput.files[0]) return;
 
-    progress.style.display = 'block';
+    progress.classList.remove('d-none');
     result.innerHTML = '';
 
     const formData = new FormData();
@@ -129,12 +134,29 @@ processBtn.onclick = async () => {
             body: formData
         });
         const data = await response.json();
-        result.innerHTML = `
-                    <p style="color: green">✓ ${data.message}</p>
-                    <p>输出文件：${data.output_path}</p>
-                `;
+        
+        if (response.ok) {
+            result.innerHTML = `
+                <div class="alert alert-success">
+                    <h5>✓ ${data.message}</h5>
+                    <p class="mb-0">输出文件：${data.output_path}</p>
+                </div>
+            `;
+        } else {
+            result.innerHTML = `
+                <div class="alert alert-danger">
+                    <h5>处理失败</h5>
+                    <p class="mb-0">${data.error || '未知错误'}</p>
+                </div>
+            `;
+        }
     } catch (error) {
-        result.innerHTML = `<p style="color: red">处理出错: ${error}</p>`;
+        result.innerHTML = `
+            <div class="alert alert-danger">
+                <h5>处理出错</h5>
+                <p class="mb-0">${error.message || '未知错误'}</p>
+            </div>
+        `;
     }
-    progress.style.display = 'none';
+    progress.classList.add('d-none');
 };

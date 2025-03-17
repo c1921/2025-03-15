@@ -1,38 +1,64 @@
 <!DOCTYPE html>
-<html>
+<html data-bs-theme="dark">
 <head>
     <title>视频裁切工具</title>
+    <link href="../static/bootstrap/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-    <h1>视频裁切工具</h1>
-    <div class="form-group">
-        <input type="file" id="videoInput" accept="video/*" required>
-    </div>
-    
-    <div class="mode-switch">
-        <button id="toggleMode" type="button">切换裁切模式</button>
-    </div>
-    
-    <div class="video-container">
-        <video id="videoPreview" controls>
-            您的浏览器不支持 HTML5 视频。
-        </video>
-        <div id="cropLine"></div>
-        <div id="cropInfo" class="crop-info"></div>
-        <div class="controls-overlay">
-            点击视频设置裁切位置 (按A键切换模式)
+    <div class="container py-4">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="card shadow-sm">
+                    <div class="card-header">
+                        <h2 class="mb-0">视频裁切工具</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="videoInput" class="form-label">选择视频文件</label>
+                            <input type="file" id="videoInput" class="form-control" accept="video/*" required>
+                        </div>
+                        
+                        <div class="row mb-3 align-items-center">
+                            <div class="col-md-4">
+                                <div class="input-group">
+                                    <span class="input-group-text">裁切位置</span>
+                                    <input type="number" id="cropHeight" class="form-control" min="100" placeholder="像素值">
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <button id="toggleMode" type="button" class="btn btn-outline-primary w-100">切换裁切模式</button>
+                            </div>
+                            <div class="col-md-4">
+                                <button id="processBtn" class="btn btn-success w-100" disabled>裁切视频</button>
+                            </div>
+                        </div>
+                        
+                        <div id="progress" class="alert alert-info progress d-none">
+                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                            处理中，请稍候...
+                        </div>
+                        
+                        <div id="result" class="mb-3"></div>
+                        
+                        <div class="video-container mb-3">
+                            <video id="videoPreview" class="w-100" controls>
+                                您的浏览器不支持 HTML5 视频。
+                            </video>
+                            <div id="cropLine"></div>
+                            <div id="cropInfo" class="crop-info"></div>
+                            <div class="controls-overlay">
+                                点击视频设置裁切位置 (按A键切换模式)
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
-    <div class="controls">
-        <input type="number" id="cropHeight" min="100" placeholder="裁切位置">
-        <button id="processBtn" disabled>裁切视频</button>
-    </div>
-    
-    <div id="progress" class="progress">处理中...</div>
-    <div id="result"></div>
-    
+    <!-- 引入 Bootstrap JS 和依赖 -->
+    <script src="../static/bootstrap/bootstrap.bundle.min.js"></script>
     <script src="/static/js/main.js"></script>
 </body>
 </html> 
