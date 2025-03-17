@@ -10,8 +10,35 @@ import tempfile
 import webbrowser
 import threading
 import time
+import subprocess
+import sys
 
 app = FastAPI()
+
+def check_ffmpeg():
+    """
+    检查 FFmpeg 是否已安装
+    :return: (bool, str) - (是否安装, 错误信息)
+    """
+    try:
+        # 尝试运行 ffmpeg -version 命令
+        subprocess.run(['ffmpeg', '-version'], 
+                     stdout=subprocess.PIPE, 
+                     stderr=subprocess.PIPE,
+                     check=True)
+        return True, ""
+    except FileNotFoundError:
+        return False, (
+            "未检测到 FFmpeg，请按照以下步骤安装：\n\n"
+            "1. 下载 FFmpeg: https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-full.7z\n"
+            "2. 解压下载的文件\n"
+            "3. 将解压后的 bin 目录添加到系统环境变量 PATH 中\n"
+            "4. 重启程序\n"
+        )
+    except subprocess.CalledProcessError as e:
+        return False, f"FFmpeg 运行出错: {e.stderr.decode()}"
+    except Exception as e:
+        return False, f"检查 FFmpeg 时发生错误: {str(e)}"
 
 # 创建必要的目录
 UPLOAD_DIR = Path("output")
@@ -97,7 +124,17 @@ def open_browser():
     webbrowser.open('http://localhost:8000')
 
 if __name__ == "__main__":
+    # 验证 FFmpeg 安装
+    ffmpeg_installed, error_msg = check_ffmpeg()
+    if not ffmpeg_installed:
+        print("\n错误：" + error_msg, file=sys.stderr)
+        print("\n按回车键退出...", end="")
+        input()
+        sys.exit(1)
+    
+    print("FFmpeg 检查通过，正在启动服务器...")
+    
     # 创建线程来打开浏览器
     threading.Thread(target=open_browser, daemon=True).start()
     # 启动服务器
-    uvicorn.run(app, host="localhost", port=8000) 
+    uvicorn.run(app, host="localhost", port=8000)
