@@ -100,18 +100,22 @@ def build_executable():
             '--hidden-import=uvicorn.lifespan',
             '--add-data=templates;templates',
             '--add-data=static;static',
-            # '--add-data=static/favicon.svg;static',
         ])
         
         # 复制必要的文件到 dist 目录
+        print("正在复制静态文件...")
+        
+        # 复制 static 目录
         if os.path.exists('dist/static'):
             shutil.rmtree('dist/static')
-        os.makedirs('dist/static')
-        # shutil.copy2('static/favicon.svg', 'dist/static/favicon.svg')
-
+        shutil.copytree('static', 'dist/static')
+        print("已复制 static 目录")
+        
+        # 复制 templates 目录
         if os.path.exists('dist/templates'):
             shutil.rmtree('dist/templates')
         shutil.copytree('templates', 'dist/templates')
+        print("已复制 templates 目录")
         
         print(f"构建完成: dist/{output_name}.exe")
         
