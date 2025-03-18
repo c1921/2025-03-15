@@ -13,6 +13,9 @@ const progress = document.getElementById('progress');
 const result = document.getElementById('result');
 const toggleMode = document.getElementById('toggleMode');
 const videoContainer = document.querySelector('.video-container');
+const audioMode = document.getElementById('audioMode');
+const audioInputGroup = document.getElementById('audioInputGroup');
+const audioInput = document.getElementById('audioInput');
 let cropMode = false;
 let isDragging = false;
 let DEFAULT_CROP_HEIGHT = 720;  // 默认值
@@ -174,7 +177,12 @@ cropHeight.addEventListener('input', (e) => {
     }
 });
 
-// 处理视频
+// 音频模式切换处理
+audioMode.addEventListener('change', () => {
+    audioInputGroup.classList.toggle('d-none', audioMode.value !== 'replace');
+});
+
+// 修改处理视频的代码
 processBtn.onclick = async () => {
     if (!videoInput.files[0]) return;
 
@@ -196,7 +204,12 @@ processBtn.onclick = async () => {
 
     const formData = new FormData();
     formData.append('video', videoInput.files[0]);
-    formData.append('crop_height', cropValue);  // 使用解析后的数字
+    formData.append('crop_height', cropValue);
+    formData.append('audio_mode', audioMode.value);
+    
+    if (audioMode.value === 'replace' && audioInput.files[0]) {
+        formData.append('audio_file', audioInput.files[0]);
+    }
 
     try {
         const response = await fetch('/process', {

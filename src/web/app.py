@@ -51,7 +51,9 @@ async def home(request: Request):
 @app.post("/process")
 async def process_video(
     video: UploadFile = File(...),
-    crop_height: int = Form(...)
+    crop_height: int = Form(...),
+    audio_mode: str = Form('keep'),
+    audio_file: UploadFile = File(None)
 ):
     """处理视频"""
     if not video.filename:
@@ -62,27 +64,49 @@ async def process_video(
         
     if crop_height <= 0:
         raise HTTPException(status_code=400, detail="裁切高度必须大于0")
+        
+    if audio_mode not in AUDIO_MODES:
+        raise HTTPException(status_code=400, detail="无效的音频处理模式")
+        
+    if audio_mode == 'replace' and not audio_file:
+        raise HTTPException(status_code=400, detail="请选择替换用的音频文件")
 
     try:
         output_path = UPLOAD_DIR / f"cropped_{video.filename}"
         output_path = get_unique_filename(output_path)
         
+        # 保存临时文件
+        temp_files = []
         with tempfile.NamedTemporaryFile(delete=False, suffix=video.filename) as temp_file:
             shutil.copyfileobj(video.file, temp_file)
-            temp_path = Path(temp_file.name)
+            video_path = Path(temp_file.name)
+            temp_files.append(video_path)
+            
+        # 如果有音频文件，也保存为临时文件
+        audio_path = None
+        if audio_file and audio_mode == 'replace':
+            with tempfile.NamedTemporaryFile(delete=False, suffix=audio_file.filename) as temp_audio:
+                shutil.copyfileobj(audio_file.file, temp_audio)
+                audio_path = Path(temp_audio.name)
+                temp_files.append(audio_path)
         
         try:
-            video_processor.crop_video(temp_path, output_path, crop_height)
+            video_processor.crop_video(
+                video_path, 
+                output_path, 
+                crop_height,
+                audio_mode=audio_mode,
+                audio_path=audio_path
+            )
             return {
                 "status": "success",
                 "message": "视频处理完成",
                 "output_path": str(output_path)
             }
-        except Exception as e:
-            logger.error(f"视频处理失败: {str(e)}")
-            raise HTTPException(status_code=500, detail=f"视频处理失败: {str(e)}")
         finally:
-            temp_path.unlink(missing_ok=True)
+            # 清理所有临时文件
+            for temp_file in temp_files:
+                temp_file.unlink(missing_ok=True)
             
     except Exception as e:
         logger.error(f"处理视频时发生错误: {str(e)}")
