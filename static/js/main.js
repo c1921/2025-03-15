@@ -59,23 +59,38 @@ cropLine.addEventListener('mousedown', (e) => {
     e.preventDefault();  // 防止选中文本
 });
 
+// 修改拖动事件处理
 document.addEventListener('mousemove', (e) => {
     if (!isDragging) return;
 
-    const rect = videoPreview.getBoundingClientRect();
-    let y = e.clientY - rect.top;
-
+    const containerRect = videoContainer.getBoundingClientRect();
+    // 使用相对于容器的坐标
+    let y = e.clientY - containerRect.top;
+    
+    // 计算实际的视频显示区域
+    const videoHeight = videoPreview.videoHeight;
+    const videoWidth = videoPreview.videoWidth;
+    const containerHeight = videoContainer.clientHeight;
+    
+    let displayHeight;
+    if (videoWidth / videoHeight > videoContainer.clientWidth / containerHeight) {
+        displayHeight = (videoHeight * videoContainer.clientWidth) / videoWidth;
+    } else {
+        displayHeight = containerHeight;
+    }
+    
+    // 计算视频在容器中的偏移
+    const topOffset = (containerHeight - displayHeight) / 2;
+    
     // 限制在视频区域内
-    y = Math.max(0, Math.min(y, videoPreview.offsetHeight));
-
+    y = Math.max(topOffset, Math.min(y, topOffset + displayHeight));
+    
     // 计算实际裁切位置
-    const height = videoPreview.offsetHeight;
-    const realHeight = videoPreview.videoHeight;
-    const ratio = realHeight / height;
-
-    const cropPos = Math.round(y * ratio);
+    const ratio = videoHeight / displayHeight;
+    const cropPos = Math.round((y - topOffset) * ratio);
+    
     // 确保值在有效范围内
-    const validPos = Math.min(Math.max(cropPos, 1), realHeight);
+    const validPos = Math.min(Math.max(cropPos, 1), videoHeight);
     cropHeight.value = validPos;
     updateCropLine(validPos);
 });
@@ -84,22 +99,38 @@ document.addEventListener('mouseup', () => {
     isDragging = false;
 });
 
-// 修改点击事件，支持直接点击设置位置
+// 修改点击事件处理
 videoContainer.onclick = (e) => {
     if (!cropMode || isDragging) return;
 
-    const rect = videoPreview.getBoundingClientRect();
-    const y = e.clientY - rect.top;
-
-    if (Math.abs(y - cropLine.offsetTop) < 20) return;  // 如果点击太靠近裁切线，忽略
-
-    const height = videoPreview.offsetHeight;
-    const realHeight = videoPreview.videoHeight;
-    const ratio = realHeight / height;
-
-    const cropPos = Math.round(y * ratio);
+    const containerRect = videoContainer.getBoundingClientRect();
+    // 使用相对于容器的坐标
+    const y = e.clientY - containerRect.top;
+    
+    // 计算实际的视频显示区域
+    const videoHeight = videoPreview.videoHeight;
+    const videoWidth = videoPreview.videoWidth;
+    const containerHeight = videoContainer.clientHeight;
+    
+    let displayHeight;
+    if (videoWidth / videoHeight > videoContainer.clientWidth / containerHeight) {
+        displayHeight = (videoHeight * videoContainer.clientWidth) / videoWidth;
+    } else {
+        displayHeight = containerHeight;
+    }
+    
+    // 计算视频在容器中的偏移
+    const topOffset = (containerHeight - displayHeight) / 2;
+    
+    // 只在视频区域内响应点击
+    if (y < topOffset || y > topOffset + displayHeight) return;
+    
+    // 计算实际裁切位置
+    const ratio = videoHeight / displayHeight;
+    const cropPos = Math.round((y - topOffset) * ratio);
+    
     // 确保值在有效范围内
-    const validPos = Math.min(Math.max(cropPos, 1), realHeight);
+    const validPos = Math.min(Math.max(cropPos, 1), videoHeight);
     cropHeight.value = validPos;
     updateCropLine(validPos);
 };
@@ -141,11 +172,32 @@ videoInput.onchange = (e) => {
 
 // 更新裁切线位置
 function updateCropLine(pos) {
-    const height = videoPreview.offsetHeight;
-    const realHeight = videoPreview.videoHeight;
-    const ratio = height / realHeight;
-
-    const linePos = pos * ratio;
+    const videoElement = videoPreview;
+    const containerHeight = videoContainer.clientHeight;
+    const videoHeight = videoElement.videoHeight;
+    const videoWidth = videoElement.videoWidth;
+    
+    // 计算视频在容器中的实际显示尺寸
+    let displayHeight;
+    let displayWidth;
+    
+    if (videoWidth / videoHeight > videoContainer.clientWidth / containerHeight) {
+        // 视频比容器更宽，以宽度为准
+        displayWidth = videoContainer.clientWidth;
+        displayHeight = (videoHeight * displayWidth) / videoWidth;
+    } else {
+        // 视频比容器更高，以高度为准
+        displayHeight = containerHeight;
+        displayWidth = (videoWidth * displayHeight) / videoHeight;
+    }
+    
+    // 计算视频在容器中的偏移
+    const topOffset = (containerHeight - displayHeight) / 2;
+    
+    // 计算裁切线位置
+    const ratio = displayHeight / videoHeight;
+    const linePos = pos * ratio + topOffset;
+    
     cropLine.style.top = `${linePos}px`;
     cropInfo.style.top = `${linePos - 20}px`;
     cropInfo.textContent = `裁切位置: ${pos}px`;

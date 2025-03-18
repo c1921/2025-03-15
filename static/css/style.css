@@ -13,6 +13,7 @@
     max-width: 100%;
     width: auto;
     height: auto;
+    object-fit: contain; /* 确保视频保持比例 */
 }
 
 #videoPreview {
@@ -26,8 +27,13 @@
     width: 100%;
     height: 20px;
     cursor: row-resize;
-    pointer-events: auto;
+    pointer-events: none;  /* 默认不响应鼠标事件 */
     margin-top: -10px;
+}
+
+/* 在裁切模式下启用裁切线交互 */
+.video-container.crop-mode #cropLine {
+    pointer-events: auto;
 }
 
 #cropLine::after {
