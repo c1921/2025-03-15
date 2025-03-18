@@ -25,16 +25,21 @@
                                 <input type="file" id="videoInput" class="form-control" accept="video/*" required>
                             </div>
                             <div class="col-12">
-                                <label for="audioMode" class="form-label">音频处理</label>
-                                <div class="input-group">
-                                    <select class="form-select" id="audioMode">
-                                        <option value="keep">保持原音频</option>
-                                        <option value="remove">删除音频</option>
-                                        <option value="replace">替换音频</option>
-                                    </select>
-                                    <input type="file" id="audioInput" class="form-control d-none" accept="audio/*">
+                                <label class="form-label">音频处理</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="audioMode" id="audioKeep" value="keep" checked>
+                                    <label class="btn btn-outline-secondary" for="audioKeep">保持原音频</label>
+                                    
+                                    <input type="radio" class="btn-check" name="audioMode" id="audioRemove" value="remove">
+                                    <label class="btn btn-outline-secondary" for="audioRemove">删除音频</label>
+                                    
+                                    <input type="radio" class="btn-check" name="audioMode" id="audioReplace" value="replace">
+                                    <label class="btn btn-outline-secondary" for="audioReplace">替换音频</label>
                                 </div>
-                                <div class="form-text">选择"替换音频"时可上传音频文件（支持 MP3, WAV, AAC, OGG 格式）</div>
+                            </div>
+                            <div class="col-12 d-none" id="audioInputGroup">
+                                <label for="audioInput" class="form-label">选择音频文件</label>
+                                <input type="file" id="audioInput" class="form-control" accept="audio/*">
                             </div>
                         </div>
 
@@ -58,8 +63,10 @@
 
                         <!-- 进度和结果显示 -->
                         <div id="progress" class="alert alert-info progress d-none">
-                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                            处理中，请稍候...
+                            <div class="d-flex align-items-center">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                <span>处理中，请稍候...</span>
+                            </div>
                         </div>
 
                         <div id="result" class="mb-3"></div>

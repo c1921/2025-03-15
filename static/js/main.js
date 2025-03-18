@@ -231,8 +231,13 @@ cropHeight.addEventListener('input', (e) => {
 });
 
 // 音频模式切换处理
-audioMode.addEventListener('change', () => {
-    audioInput.classList.toggle('d-none', audioMode.value !== 'replace');
+document.querySelectorAll('input[name="audioMode"]').forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        audioInputGroup.classList.toggle('d-none', e.target.value !== 'replace');
+        if (e.target.value !== 'replace') {
+            audioInput.value = '';  // 清空已选择的文件
+        }
+    });
 });
 
 // 修改处理视频的代码
@@ -252,15 +257,19 @@ processBtn.onclick = async () => {
         return;
     }
 
+    // 禁用按钮
+    processBtn.disabled = true;
     progress.classList.remove('d-none');
     result.innerHTML = '';
 
     const formData = new FormData();
     formData.append('video', videoInput.files[0]);
     formData.append('crop_height', cropValue);
-    formData.append('audio_mode', audioMode.value);
+    // 获取选中的音频模式
+    const audioMode = document.querySelector('input[name="audioMode"]:checked').value;
+    formData.append('audio_mode', audioMode);
     
-    if (audioMode.value === 'replace' && audioInput.files[0]) {
+    if (audioMode === 'replace' && audioInput.files[0]) {
         formData.append('audio_file', audioInput.files[0]);
     }
 
@@ -294,5 +303,7 @@ processBtn.onclick = async () => {
             </div>
         `;
     }
+    // 重新启用按钮
+    processBtn.disabled = false;
     progress.classList.add('d-none');
 };
