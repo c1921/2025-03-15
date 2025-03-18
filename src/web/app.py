@@ -2,15 +2,17 @@ import sys
 from pathlib import Path
 import logging
 
+# 添加项目根目录到 Python 路径
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root))
+
+from version.version import VERSION_STR, APP_NAME, COMPANY, DESCRIPTION, COPYRIGHT
+
 # 在文件开头添加日志配置
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-
-# 添加项目根目录到 Python 路径
-project_root = Path(__file__).parent.parent.parent
-sys.path.append(str(project_root))
 
 from fastapi import FastAPI, UploadFile, File, Form, Request, HTTPException
 from fastapi.responses import HTMLResponse
@@ -45,7 +47,12 @@ async def home(request: Request):
     """返回主页"""
     return templates.TemplateResponse("index.html", {
         "request": request,
-        "DEFAULT_CROP_HEIGHT": DEFAULT_CROP_HEIGHT
+        "DEFAULT_CROP_HEIGHT": DEFAULT_CROP_HEIGHT,
+        "version": VERSION_STR,
+        "app_name": APP_NAME,
+        "company": COMPANY,
+        "description": DESCRIPTION,
+        "copyright": COPYRIGHT
     })
 
 @app.post("/process")

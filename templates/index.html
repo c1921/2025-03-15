@@ -4,6 +4,7 @@
 <head>
     <title>视频裁切工具</title>
     <link href="../static/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="../static/bootstrap/bootstrap-icons.min.css">
     <link rel="stylesheet" href="/static/css/style.css">
     <script src="../static/bootstrap/bootstrap.bundle.min.js"></script>
 </head>
@@ -17,7 +18,7 @@
                     <div class="card-header">
                         <h2 class="mb-0">控制面板</h2>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column justify-content-between">
                         <!-- 文件选择区域 -->
                         <div class="row mb-4 g-3">
                             <div class="col-12">
@@ -70,6 +71,13 @@
                         </div>
 
                         <div id="result" class="mb-3"></div>
+
+                        <!-- 在控制面板底部添加“关于”按钮 -->
+                        <div class="mt-auto text-end">
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#aboutModal">
+                                <i class="bi bi-info-circle"></i> 关于
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -92,6 +100,30 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- 模态框 -->
+    <div class="modal fade" id="aboutModal" tabindex="-1" aria-labelledby="aboutModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="aboutModalLabel">关于 {{ app_name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>版本：{{ version }}</p>
+                    <p>{{ description }}</p>
+                    <p class="mb-2">
+                        <a href="https://github.com/c1921/Video-Cropper" target="_blank" class="text-decoration-none">
+                            <i class="bi bi-github"></i> GitHub
+                        </a>
+                    </p>
+                    <p>{{ copyright }}</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>
