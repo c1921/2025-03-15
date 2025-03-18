@@ -179,7 +179,7 @@ cropHeight.addEventListener('input', (e) => {
 
 // 音频模式切换处理
 audioMode.addEventListener('change', () => {
-    audioInputGroup.classList.toggle('d-none', audioMode.value !== 'replace');
+    audioInput.classList.toggle('d-none', audioMode.value !== 'replace');
 });
 
 // 修改处理视频的代码
