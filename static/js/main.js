@@ -1,3 +1,8 @@
+const BUTTON_STYLES = {
+    INACTIVE: 'btn-outline-secondary',  // 非裁切模式样式
+    ACTIVE: 'btn-danger'               // 裁切模式样式
+};
+
 const videoInput = document.getElementById('videoInput');
 const videoPreview = document.getElementById('videoPreview');
 const cropLine = document.getElementById('cropLine');
@@ -16,8 +21,8 @@ function toggleCropMode() {
     cropMode = !cropMode;
     videoContainer.classList.toggle('crop-mode', cropMode);
     toggleMode.textContent = cropMode ? '退出裁切模式' : '切换裁切模式';
-    toggleMode.classList.toggle('btn-outline-primary', !cropMode);
-    toggleMode.classList.toggle('btn-primary', cropMode);
+    toggleMode.classList.toggle(BUTTON_STYLES.INACTIVE, !cropMode);
+    toggleMode.classList.toggle(BUTTON_STYLES.ACTIVE, cropMode);
 
     // 在裁切模式下暂停视频
     if (cropMode) {
@@ -93,8 +98,8 @@ videoInput.onchange = (e) => {
         processBtn.disabled = false;
         cropMode = false;
         videoContainer.classList.remove('crop-mode');
-        toggleMode.classList.add('btn-outline-primary');
-        toggleMode.classList.remove('btn-primary');
+        toggleMode.classList.add(BUTTON_STYLES.INACTIVE);
+        toggleMode.classList.remove(BUTTON_STYLES.ACTIVE);
         toggleMode.textContent = '切换裁切模式';
 
         // 加载视频后显示裁切线
