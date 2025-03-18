@@ -43,7 +43,10 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 @app.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """返回主页"""
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "DEFAULT_CROP_HEIGHT": DEFAULT_CROP_HEIGHT
+    })
 
 @app.post("/process")
 async def process_video(
@@ -57,6 +60,9 @@ async def process_video(
     if not video.content_type.startswith('video/'):
         raise HTTPException(status_code=400, detail="请上传视频文件")
         
+    if crop_height <= 0:
+        raise HTTPException(status_code=400, detail="裁切高度必须大于0")
+
     try:
         output_path = UPLOAD_DIR / f"cropped_{video.filename}"
         output_path = get_unique_filename(output_path)
@@ -81,6 +87,13 @@ async def process_video(
     except Exception as e:
         logger.error(f"处理视频时发生错误: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/config")
+async def get_config():
+    """返回前端需要的配置"""
+    return {
+        "DEFAULT_CROP_HEIGHT": DEFAULT_CROP_HEIGHT
+    }
 
 def start_server():
     """启动服务器"""

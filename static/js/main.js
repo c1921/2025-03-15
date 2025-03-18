@@ -1,5 +1,5 @@
 const BUTTON_STYLES = {
-    INACTIVE: 'btn-outline-secondary',  // 非裁切模式样式
+    INACTIVE: 'btn-secondary',  // 非裁切模式样式
     ACTIVE: 'btn-danger'               // 裁切模式样式
 };
 
@@ -15,6 +15,14 @@ const toggleMode = document.getElementById('toggleMode');
 const videoContainer = document.querySelector('.video-container');
 let cropMode = false;
 let isDragging = false;
+let DEFAULT_CROP_HEIGHT = 720;  // 默认值
+
+// 获取服务器配置
+fetch('/config')
+    .then(response => response.json())
+    .then(config => {
+        DEFAULT_CROP_HEIGHT = config.DEFAULT_CROP_HEIGHT;
+    });
 
 // 切换裁切模式
 function toggleCropMode() {
@@ -63,8 +71,10 @@ document.addEventListener('mousemove', (e) => {
     const ratio = realHeight / height;
 
     const cropPos = Math.round(y * ratio);
-    cropHeight.value = cropPos;
-    updateCropLine(cropPos);
+    // 确保值在有效范围内
+    const validPos = Math.min(Math.max(cropPos, 1), realHeight);
+    cropHeight.value = validPos;
+    updateCropLine(validPos);
 });
 
 document.addEventListener('mouseup', () => {
@@ -85,8 +95,10 @@ videoContainer.onclick = (e) => {
     const ratio = realHeight / height;
 
     const cropPos = Math.round(y * ratio);
-    cropHeight.value = cropPos;
-    updateCropLine(cropPos);
+    // 确保值在有效范围内
+    const validPos = Math.min(Math.max(cropPos, 1), realHeight);
+    cropHeight.value = validPos;
+    updateCropLine(validPos);
 };
 
 // 视频预览
@@ -95,7 +107,7 @@ videoInput.onchange = (e) => {
     if (file) {
         const url = URL.createObjectURL(file);
         videoPreview.src = url;
-        processBtn.disabled = false;
+        processBtn.disabled = true;  // 初始时禁用按钮
         cropMode = false;
         videoContainer.classList.remove('crop-mode');
         toggleMode.classList.add(BUTTON_STYLES.INACTIVE);
@@ -105,7 +117,21 @@ videoInput.onchange = (e) => {
         // 加载视频后显示裁切线
         videoPreview.onloadedmetadata = () => {
             cropLine.style.display = 'block';
-            updateCropLine(720); // 默认位置
+            
+            // 根据视频实际高度设置默认裁切高度
+            const videoHeight = videoPreview.videoHeight;
+            let defaultHeight;
+            
+            if (videoHeight <= DEFAULT_CROP_HEIGHT) {
+                // 如果视频高度小于默认值，使用视频高度的一半
+                defaultHeight = Math.floor(videoHeight / 2);
+            } else {
+                // 否则使用默认值
+                defaultHeight = DEFAULT_CROP_HEIGHT;
+            }
+            
+            cropHeight.value = defaultHeight;
+            updateCropLine(defaultHeight);
         };
     }
 };
@@ -120,18 +146,57 @@ function updateCropLine(pos) {
     cropLine.style.top = `${linePos}px`;
     cropInfo.style.top = `${linePos - 20}px`;
     cropInfo.textContent = `裁切位置: ${pos}px`;
+    
+    // 更新裁切按钮状态
+    processBtn.disabled = !pos || !videoInput.files[0];
 }
+
+// 修改裁切高度输入框的验证
+cropHeight.addEventListener('input', (e) => {
+    const value = parseInt(e.target.value);
+    const maxHeight = videoPreview.videoHeight;
+    
+    if (!isNaN(value) && value >= 1 && value <= maxHeight) {
+        cropHeight.classList.remove('is-invalid');
+        updateCropLine(value);
+    } else {
+        cropHeight.classList.add('is-invalid');
+        processBtn.disabled = true;
+        
+        // 添加错误提示
+        if (value > maxHeight) {
+            cropHeight.title = `裁切高度不能超过视频高度 ${maxHeight}px`;
+        } else if (value < 1) {
+            cropHeight.title = '裁切高度必须大于0';
+        } else {
+            cropHeight.title = '请输入有效的数字';
+        }
+    }
+});
 
 // 处理视频
 processBtn.onclick = async () => {
     if (!videoInput.files[0]) return;
+
+    const cropValue = parseInt(cropHeight.value);
+    const maxHeight = videoPreview.videoHeight;
+    
+    if (isNaN(cropValue) || cropValue < 1 || cropValue > maxHeight) {
+        result.innerHTML = `
+            <div class="alert alert-danger">
+                <h5>错误</h5>
+                <p class="mb-0">裁切高度必须在 1 到 ${maxHeight} 像素之间</p>
+            </div>
+        `;
+        return;
+    }
 
     progress.classList.remove('d-none');
     result.innerHTML = '';
 
     const formData = new FormData();
     formData.append('video', videoInput.files[0]);
-    formData.append('crop_height', cropHeight.value);
+    formData.append('crop_height', cropValue);  // 使用解析后的数字
 
     try {
         const response = await fetch('/process', {
@@ -151,7 +216,7 @@ processBtn.onclick = async () => {
             result.innerHTML = `
                 <div class="alert alert-danger">
                     <h5>处理失败</h5>
-                    <p class="mb-0">${data.error || '未知错误'}</p>
+                    <p class="mb-0">${data.detail || data.error || '未知错误'}</p>
                 </div>
             `;
         }

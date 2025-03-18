@@ -11,9 +11,9 @@ SERVER_HOST = "localhost"
 SERVER_PORT = 8000
 
 # 视频处理配置
-MIN_CROP_HEIGHT = 100
-VIDEO_CODEC = 'h264'
-AUDIO_CODEC = 'aac'
-AUDIO_BITRATE = '192k'
-VIDEO_PRESET = 'slow'
-VIDEO_CRF = 18 
+DEFAULT_CROP_HEIGHT = 720  # 默认裁切高度
+VIDEO_CODEC = 'h264'      # 视频编码
+AUDIO_CODEC = 'aac'       # 音频编码
+AUDIO_BITRATE = '192k'    # 音频比特率
+VIDEO_PRESET = 'slow'     # 编码预设
+VIDEO_CRF = 18           # 视频质量因子
