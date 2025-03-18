@@ -23,6 +23,16 @@ class VideoProcessor:
             logger.error(f"处理视频信息时发生错误: {str(e)}")
             raise
 
+    def get_media_duration(self, input_path: Path) -> float:
+        """获取媒体文件时长"""
+        try:
+            probe = ffmpeg.probe(str(input_path))
+            # 获取时长（秒）
+            return float(probe['format']['duration'])
+        except Exception as e:
+            logger.error(f"获取媒体时长失败: {str(e)}")
+            raise
+
     def crop_video(self, 
                   input_path: Path, 
                   output_path: Path, 
@@ -47,6 +57,7 @@ class VideoProcessor:
             # 基础视频流
             stream = ffmpeg.input(str(input_path))
             video = stream.filter('crop', width, crop_height, 0, 0)
+            video_duration = self.get_media_duration(input_path)
             
             # 音频处理
             output_args = {
@@ -62,7 +73,6 @@ class VideoProcessor:
                     'acodec': AUDIO_CODEC,
                     'audio_bitrate': AUDIO_BITRATE
                 })
-                # 获取原始音频流
                 audio = stream.audio
                 stream = ffmpeg.output(video, audio, str(output_path), **output_args)
                 
@@ -73,7 +83,31 @@ class VideoProcessor:
                 
             elif audio_mode == 'replace' and audio_path:
                 # 替换音频
+                audio_duration = self.get_media_duration(audio_path)
                 audio = ffmpeg.input(str(audio_path))
+                
+                if audio_duration < video_duration:
+                    # 音频较短，需要循环
+                    logger.info(f"音频时长 ({audio_duration:.2f}s) 小于视频时长 ({video_duration:.2f}s)，将循环播放")
+                    # 计算需要重复的次数
+                    loop_times = int(video_duration / audio_duration) + 1
+                    
+                    # 创建音频流列表
+                    audio_streams = []
+                    for _ in range(loop_times):
+                        audio_streams.append(audio)
+                    
+                    # 使用 concat 过滤器连接多个音频流
+                    audio = (ffmpeg
+                            .concat(*audio_streams, v=0, a=1)
+                            .filter('atrim', duration=video_duration)  # 裁切到视频长度
+                            .filter('asetpts', 'PTS-STARTPTS'))  # 重置时间戳
+                    
+                elif audio_duration > video_duration:
+                    # 音频较长，需要裁切
+                    logger.info(f"音频时长 ({audio_duration:.2f}s) 大于视频时长 ({video_duration:.2f}s)，将被裁切")
+                    audio = audio.filter('atrim', duration=video_duration)
+                
                 stream = ffmpeg.output(video, audio, str(output_path),
                                     acodec=AUDIO_CODEC,
                                     audio_bitrate=AUDIO_BITRATE,
