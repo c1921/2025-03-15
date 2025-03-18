@@ -46,7 +46,8 @@ toggleMode.onclick = toggleCropMode;
 
 // 修改键盘事件监听
 document.addEventListener('keydown', (e) => {
-    if (e.code === 'KeyA' && document.activeElement.tagName !== 'INPUT') {
+    // 只在输入数字的输入框上禁用快捷键
+    if (e.code === 'KeyA' && document.activeElement.type !== 'number') {
         e.preventDefault();
         toggleCropMode();
     }
