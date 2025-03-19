@@ -69,3 +69,5 @@ dmypy.json
 config.json
 debug_output
 *.mp4
+
+version_info.txt
