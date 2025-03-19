@@ -91,10 +91,9 @@ def build_executable():
         os.environ['PYTHONIOENCODING'] = 'utf-8'
         
         PyInstaller.__main__.run([
-            'app.py',
+            'src/web/app.py',
             f'--name={output_name}',
             '--onefile',
-            '--hidden-import=video_cropper',
             '--hidden-import=uvicorn.logging',
             '--hidden-import=uvicorn.lifespan.on',
             '--hidden-import=uvicorn.lifespan',
