@@ -2,6 +2,7 @@ import sys
 from pathlib import Path
 import logging
 import os
+import socket
 
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent.parent
@@ -29,6 +30,7 @@ from logging import getLogger
 from src.core.video_processor import VideoProcessor
 from src.utils.ffmpeg_utils import check_ffmpeg, get_unique_filename
 from config import *
+import uvicorn
 
 logger = getLogger(__name__)
 
@@ -140,6 +142,17 @@ async def get_config():
         "DEFAULT_CROP_HEIGHT": DEFAULT_CROP_HEIGHT
     }
 
+def find_free_port(start_port=8080, max_tries=100):
+    """查找可用的端口号"""
+    for port in range(start_port, start_port + max_tries):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                s.bind(('127.0.0.1', port))
+                return port
+        except OSError:
+            continue
+    raise RuntimeError('无法找到可用的端口')
+
 def start_server():
     """启动服务器"""
     ffmpeg_installed, error_msg = check_ffmpeg()
@@ -148,14 +161,17 @@ def start_server():
         raise SystemExit(1)
     
     logger.info("FFmpeg 检查通过，正在启动服务器...")
+
+    # 查找可用的端口
+    port = find_free_port(SERVER_PORT)
     
     # 使用线程在服务器启动后打开浏览器
     threading.Thread(target=lambda: (time.sleep(1), webbrowser.open(
-        f'http://{SERVER_HOST}:{SERVER_PORT}'
+        f'http://{SERVER_HOST}:{port}'
     )), daemon=True).start()
     
-    import uvicorn
-    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
+    # 使用 uvicorn 启动服务器
+    uvicorn.run(app, host=SERVER_HOST, port=port)
 
 if __name__ == "__main__":
     start_server() 
