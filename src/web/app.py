@@ -148,9 +148,11 @@ def start_server():
         raise SystemExit(1)
     
     logger.info("FFmpeg 检查通过，正在启动服务器...")
-    threading.Thread(target=lambda: time.sleep(1) and webbrowser.open(
+    
+    # 使用线程在服务器启动后打开浏览器
+    threading.Thread(target=lambda: (time.sleep(1), webbrowser.open(
         f'http://{SERVER_HOST}:{SERVER_PORT}'
-    ), daemon=True).start()
+    )), daemon=True).start()
     
     import uvicorn
     uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
