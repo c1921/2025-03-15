@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import logging
+import os
 
 # 添加项目根目录到 Python 路径
 project_root = Path(__file__).parent.parent.parent
@@ -33,6 +34,16 @@ logger = getLogger(__name__)
 
 app = FastAPI(title="视频裁切工具")
 video_processor = VideoProcessor()
+
+# 动态设置 UPLOAD_DIR 为可执行文件所在目录的 output 子目录
+if getattr(sys, 'frozen', False):
+    # 如果是打包后的可执行文件
+    base_dir = Path(sys.executable).parent
+else:
+    # 如果是直接运行的脚本
+    base_dir = Path(__file__).resolve().parent.parent
+
+UPLOAD_DIR = base_dir / "output"
 
 # 初始化所有必要的目录
 for directory in [UPLOAD_DIR, TEMPLATES_DIR, STATIC_DIR]:
@@ -79,6 +90,9 @@ async def process_video(
         raise HTTPException(status_code=400, detail="请选择替换用的音频文件")
 
     try:
+        # 确保 output 目录存在
+        UPLOAD_DIR.mkdir(exist_ok=True, parents=True)
+        
         output_path = UPLOAD_DIR / f"cropped_{video.filename}"
         output_path = get_unique_filename(output_path)
         

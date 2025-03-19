@@ -116,6 +116,11 @@ def build_executable():
         shutil.copytree('templates', 'dist/templates')
         print("已复制 templates 目录")
         
+        # 确保 output 目录存在
+        if not os.path.exists('dist/output'):
+            os.makedirs('dist/output')
+        print("已创建 output 目录")
+        
         print(f"构建完成: dist/{output_name}.exe")
         
     except Exception as e:
